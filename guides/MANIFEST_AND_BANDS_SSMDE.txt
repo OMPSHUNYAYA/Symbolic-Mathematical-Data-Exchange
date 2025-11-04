@@ -1,0 +1,98 @@
+MANIFEST & BANDS — Shunyaya Symbolic Mathematical Data Exchange (SSMDE)
+
+**Purpose**
+Document the **policy** that binds numeric ranges to human actions, so every declaration is reproducible:
+- How **align** is computed.
+- What **bands** exist (names, numeric cutpoints).
+- What **actions** and **time windows** are promised for each band.
+- The **identity** and **version** of this policy (**manifest_id**).
+
+----------------------------------------
+1) Manifest template (copy, edit, version)
+----------------------------------------
+`{
+  "manifest_id": "PLANT_A_BEARING_SAFETY_v7",
+  "domain": "Industrial/Mechanical",
+  "description": "Bearing health policy for Plant A, Line 3.",
+  "align_computation": {
+    "eps_a": 1e-6,
+    "eps_w": 1e-12,
+    "weights": "uniform",
+    "pipeline": [
+      "a_c := clamp(a_raw, -1+eps_a, +1-eps_a)",
+      "u := atanh(a_c)",
+      "U += w * u ; W += w",
+      "align := tanh( U / max(W, eps_w) )"
+    ]
+  },
+  "bands": [
+    { "name": "CRITICAL", "align_min": -1.00, "align_max": -0.80, "action": "stop/evacuate",  "window": "human respond in <= 10 min" },
+    { "name": "AMBER",    "align_min": -0.80, "align_max": -0.30, "action": "inspect",        "window": "inspect in <= 30 min" },
+    { "name": "A0",       "align_min": -0.30, "align_max":  0.70, "action": "monitor only",   "window": "inspect in <= 8h" },
+    { "name": "A++",      "align_min":  0.70, "align_max":  1.00, "action": "no action",      "window": "none" }
+  ],
+  "escalation_owner": "Plant Safety Officer",
+  "policy_author": "Reliability Board",
+  "policy_version": "v7",
+  "revision_notes": "Updated AMBER window from 60 min to 30 min"
+}`
+
+**Validation rules** (what our tool checks)
+- Bands are within [-1, +1], **ordered by align_max** ascending, with no overlaps.
+- Gaps are allowed but discouraged; aim to cover as close to [-1,+1] as reasonable.
+- eps guards sane: `0 < eps_a < 1e-2`, `0 < eps_w < 1e-6`.
+
+Run validators:
+- `python ssmde_align_core.py --manifest-from "MANIFEST_SAMPLE.json" --manifest-validate`
+- `python ssmde_align_core.py --manifest-from "MANIFEST_SAMPLE.json" --band-card`
+- `python ssmde_align_core.py --manifest-from "MANIFEST_SAMPLE.json" --manifest-dump-effective "EFFECTIVE.json"`
+
+----------------------------------------
+2) Operator band card (printable cheat sheet)
+----------------------------------------
+**Band name → numeric range → promised action → time window**
+- **CRITICAL** : (-1.00, -0.80] → **stop/evacuate** → **human respond in <= 10 min**
+- **AMBER**    : (-0.80, -0.30] → **inspect** → **inspect in <= 30 min**
+- **A0**       : (-0.30,  0.70] → **monitor only** → **inspect in <= 8h**
+- **A++**      : ( 0.70,  1.00] → **no action** → **none**
+
+**Promise discipline**
+If you change any **window** or **action**, bump **policy_version**, record **revision_notes**, and notify operations.
+
+----------------------------------------
+3) Align source and windows (domain guidance)
+----------------------------------------
+**Choose your a_raw** so it reflects real risk/stability:
+- Manufacturing: vibration, temperature drift, torque spikes.
+- Power: voltage sag, PF dips, thermal stress.
+- AI: uncertainty, contrastive margins, abstention scores.
+- Finance: variance bursts, collection slippage, churn precursors.
+
+**Windowing**
+- Start with 3–5 samples in a short window (seconds to minutes).
+- Uniform weights first. Tune only if a domain SME requests (use `--weights` if needed).
+
+----------------------------------------
+4) Stamp discipline
+----------------------------------------
+- Stamp only the **content block** `{value, align, band, manifest_id}`.
+- Chain with `prev = sha256(prev_stamp)` to make timeline manipulations visible.
+- Store stamps alongside events. Auditors will thank you.
+
+----------------------------------------
+5) Governance and CI
+----------------------------------------
+- Keep this file next to your policy JSON. Treat it as the **human contract** of the numbers.
+- CI run on change:
+  - `ssmde_verify.py` → ALL CHECKS PASSED
+  - `--manifest-validate` → PASS (no hard fails)
+- On release:
+  - Tag `manifest_id` and `policy_version`.
+  - Archive **EFFECTIVE.json** (post-normalization) for defense-in-brief.
+
+----------------------------------------
+License & safety
+----------------------------------------
+Open standard. Attribution required to "Shunyaya Symbolic Mathematical Data Exchange (SSMDE)".  
+No exclusive control by any implementer. Observation-only; do not use as sole safety gate in life-critical systems without independent verification.  
+No warranty. No endorsement or affiliation implied.

@@ -1,0 +1,73 @@
+GETTING STARTED — Shunyaya Symbolic Mathematical Data Exchange (SSMDE)
+
+Observation-only. Values unchanged. Accountability added.
+
+**What is SSMDE (in one line)**
+Carry five inseparable parts with every signal: **value**, **align**, **band**, **manifest_id**, **stamp**.
+
+**Why it matters**
+- **Operators protected.** Every declaration says how sure it is and which rulebook defined that judgment.
+- **Policy becomes provable.** Decisions are tied to manifest versions you can audit.
+- **Trust travels.** Any system can verify the same five parts without custom glue.
+
+----------------------------------------
+DAY 1 — Minimal, no-dashboards-broken rollout
+----------------------------------------
+**Objective:** Emit SSMDE alongside your existing payloads (no removals). Keep dashboards running.
+
+**Minimal record shape** (five canonical fields; your own schema around it is OK):
+`{
+  "value": { ...original measurements/signals... },
+  "align": <float in (-1,+1)>,
+  "band": "<human label>",
+  "manifest_id": "<policy identifier>",
+  "stamp": "SSMCLOCK1|<utc_iso>|theta=<deg>|sha256=<hex>|prev=<hex-or-NONE>"
+}`
+
+**How to compute `align`** (canonical pipeline; keep as-is):
+`a_c := clamp(a_raw, -1+eps_a, +1-eps_a)`
+`u := atanh(a_c)`
+`U += w*u ; W += w`
+`align := tanh( U / max(W, eps_w) )`
+- **a_raw** = your domain’s raw stability/uncertainty/stress/confidence samples (windowed or point list).
+- **eps_a** ~ `1e-6` (bound |a| < 1). **eps_w** ~ `1e-12` (avoid divide-by-zero).
+- **w** default = 1 per sample (or pass weights).
+
+**Band mapping**
+- A **manifest** defines cutpoints and action windows, e.g. CRITICAL < AMBER < A0 < A++.
+- Your `align` falls into exactly one band. Keep labels simple and human.
+
+**Stamp**
+- Build over **(value, align, band, manifest_id)** only.
+- Format: `SSMCLOCK1|<utc_iso>|theta=<0..360>|sha256=<canonical_json_hex>|prev=<hash(prev_stamp)|NONE>`
+- `prev` chains your declarations (timeline visible by design).
+
+**Try it now (local)**
+1) `python ssmde_align_core.py --demo --pretty`
+2) `python ssmde_align_core.py --emit-manifest "MANIFEST_SAMPLE.json"`
+3) `python ssmde_align_core.py --emit-examples "SSMDE_RECORD_EXAMPLES.jsonl" --examples 10 --seed 42`
+4) `python ssmde_verify.py`  → **ALL CHECKS PASSED**
+
+----------------------------------------
+DAY 30 — Tighten governance & scale out
+----------------------------------------
+**Goals:**
+- **Promote** the manifest to a versioned policy repo (review, sign-offs, change log).
+- **CI checks**: run `ssmde_verify.py` and `--manifest-validate` on every change.
+- **Rollout playbook**: who edits manifests, who approves, how to notify operations of band window changes.
+- **Observability**: dashboards show both **value** and **align**, with **band** color and SLA timers derived from the manifest’s action windows.
+- **Chaining everywhere**: ensure `prev` uses the hash of the last emitted stamp to make timeline tampering visible.
+
+----------------------------------------
+Integration quick notes
+----------------------------------------
+**Do NOT change your classical values.** `phi((m,a)) = m` — values remain the same.
+**Start with uniform weights.** Only add weighting if a domain expert asks for it.
+**Keep band labels human.** “CRITICAL/AMBER/A0/A++” is fine; your org can rename.
+**Use canonical JSON for hashing the content block.** Keys sorted, `,` and `:` separators tight.
+
+----------------------------------------
+Safety note
+----------------------------------------
+**Observation-only.** Do not use SSMDE as the sole gate in life-critical decisions without independent verification.
+No warranty. No endorsement or affiliation implied.
