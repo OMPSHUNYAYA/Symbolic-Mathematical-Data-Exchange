@@ -1,0 +1,76 @@
+{
+  "id": "PLANT_A_BEARING_SAFETY_v7",
+  "description": "Plant A bearing safety policy. Observation-only. Bands sorted by ascending align_max.",
+  "owners": [
+    "Operations",
+    "Safety"
+  ],
+  "escalation_owner": "Safety on-call",
+  "align_computation": {
+    "step_1": "a_c := clamp(a, -1+eps_a, +1-eps_a)",
+    "step_2": "u := atanh(a_c)",
+    "accumulate": "U += w*u ; W += w",
+    "step_3": "align := tanh( U / max(W, eps_w) )",
+    "eps_a": 1e-06,
+    "eps_w": 1e-12,
+    "weight_rule": "w := 1.0"
+  },
+  "gate": {
+    "enabled": false,
+    "mode": "mul",
+    "rho": 0.2,
+    "note": "Optional environment gate; alignment-only; classical m untouched."
+  },
+  "bands": [
+    {
+      "name": "CRITICAL",
+      "align_min": -1.0,
+      "align_max": -0.8,
+      "action": "stop/evacuate",
+      "window": "human respond in <= 10 min"
+    },
+    {
+      "name": "AMBER",
+      "align_min": -0.8,
+      "align_max": -0.3,
+      "action": "inspect",
+      "window": "inspect in <= 30 min"
+    },
+    {
+      "name": "A0",
+      "align_min": -0.3,
+      "align_max": 0.7,
+      "action": "monitor only",
+      "window": "inspect in <= 8h"
+    },
+    {
+      "name": "A++",
+      "align_min": 0.7,
+      "align_max": 1.0,
+      "action": "no action",
+      "window": "none"
+    }
+  ],
+  "disclosure_policy": {
+    "CRITICAL": "full_ssmde",
+    "AMBER": "full_ssmde",
+    "A0": "value_only",
+    "A++": "value_only"
+  },
+  "observability": {
+    "acceptance_gates": [
+      "phi((m,a)) == m",
+      "a_c := clamp(a, -1+eps_a, +1-eps_a)",
+      "order_invariance := true",
+      "band_thresholds_match_manifest := true",
+      "sha256(prev_stamp) == next.prev"
+    ],
+    "tolerance_align_fixed_point": 0.0001
+  },
+  "stamp_requirements": {
+    "format": "SSMCLOCK1|<utc_iso>|theta=<deg>|sha256=<hex>|prev=<hex|NONE>",
+    "chain_policy": "never edit historical stamps; branch via prev only",
+    "reconcile": "prefer chain with latest utc_iso and intact verification; retain alternate lineage until resolved"
+  },
+  "notes": "Observation-only; preserve classical values byte-for-byte; bands are advisory, not life-critical directives."
+}

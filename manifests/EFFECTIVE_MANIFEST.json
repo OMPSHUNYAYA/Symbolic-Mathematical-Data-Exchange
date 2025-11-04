@@ -1,0 +1,44 @@
+{
+  "manifest_id": "PLANT_A_BEARING_SAFETY_v7",
+  "eps_a": 1e-06,
+  "eps_w": 1e-12,
+  "weight_rule": "w := 1.0",
+  "bands_tuple": [
+    [
+      "CRITICAL",
+      -1.0,
+      -0.8
+    ],
+    [
+      "AMBER",
+      -0.8,
+      -0.3
+    ],
+    [
+      "A0",
+      -0.3,
+      0.7
+    ],
+    [
+      "A++",
+      0.7,
+      1.0
+    ]
+  ],
+  "disclosure_policy": {
+    "CRITICAL": "full_ssmde",
+    "AMBER": "full_ssmde",
+    "A0": "value_only",
+    "A++": "value_only"
+  },
+  "stamp": {
+    "format": "SSMCLOCK1|<utc_iso>|theta=<deg>|sha256=<hex>|prev=<hex|NONE>"
+  },
+  "acceptance_gates": [
+    "phi((m,a)) == m",
+    "a_c := clamp(a, -1+eps_a, +1-eps_a)",
+    "order_invariance := true",
+    "band_thresholds_match_manifest := true",
+    "sha256(prev_stamp) == next.prev"
+  ]
+}
