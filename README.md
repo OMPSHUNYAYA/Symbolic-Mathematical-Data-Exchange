@@ -1,7 +1,8 @@
 # SSMDE — Shunyaya Symbolic Mathematical Data Exchange
 *Portable truth. Verifiable data. Human-aligned governance.*
 
-![License](https://img.shields.io/badge/license-Open%20Standard%20%2F%20Open%20Source-brightgreen?style=flat&logo=open-source-initiative)
+[![License — Open Standard / Open Source](https://img.shields.io/badge/license-Open%20Standard%20%2F%20Open%20Source-brightgreen?style=flat&logo=open-source-initiative)](#license--usage)
+[![SSMDE Verification](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Data-Exchange/actions/workflows/verify.yml/badge.svg)](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Data-Exchange/actions/workflows/verify.yml)
 
 **Executive overview**  
 SSMDE is an open, vendor-neutral way to move truth between systems. 
