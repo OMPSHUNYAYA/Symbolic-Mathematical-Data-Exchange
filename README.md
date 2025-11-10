@@ -121,6 +121,14 @@ Do not use SSMDE as the sole gate in life-critical systems without independent v
 
 ---
 
+## Semantic Category / Practical Scope
+
+- **Domains:** AI alignment, network observability, data provenance, governance frameworks, safety-state signaling, operational assurance.
+- **Integration surfaces:** HTTP / MQTT / Kafka / REST / streaming telemetry / embedded buses.
+- **Implementation footprint:** Python, Rust, Go, C, browser JavaScript. No protocol rewrites. No vendor lock.
+
+---
+
 ## Topics
 
 Shunyaya Symbolic Mathematical Data Exchange (SSMDE), symbolic data exchange, open standard, auditability, manifest discipline, bounded alignment, tamper-evident stamping, portable governance layer, observation-only framework.
